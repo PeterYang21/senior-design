@@ -101,7 +101,7 @@ void loop(){ //Mind the infinite loop()
   {
     initial_move();
   }
-  delay(2000); // delay between stage
+  delay(1000); // delay between stage
   
   if(leftFlag)
   {
@@ -115,10 +115,11 @@ void loop(){ //Mind the infinite loop()
     else
     {
       headLeft(); // normal stage 2
-      delay(3000);
-      turn_left(); // ***
+      delay(1000);
+      turn_left(); // *** start entering stage 3
     }
 
+    // stage 3
     dist3 = getDistance(trigPin3, echoPin3);
     dist4 = getDistance(trigPin4, echoPin4);
     dist5 = getDistance(trigPin5, echoPin5);
@@ -161,7 +162,8 @@ void loop(){ //Mind the infinite loop()
       delay(3000);
       steerControl.writeMicroseconds(1450); // turn right
     }
-    
+
+    // stage 3
     dist3 = getDistance(trigPin3, echoPin3);
     dist4 = getDistance(trigPin4, echoPin4);
     dist5 = getDistance(trigPin5, echoPin5);
@@ -205,11 +207,14 @@ void loop(){ //Mind the infinite loop()
     }
   }
 
+  /*
+   * clear all
+   */
   initialFlag = 0;
   leftFlag = 0;
   rightFlag = 0;
   straightFlag=  0;
-  Serial.print("stop car1\n");
+  Serial.print("stop car in forward path\n");
   stop_car();
 }
 
@@ -220,7 +225,7 @@ void initial_move()
   unsigned long currentTime = millis();
   int dist3_ori = getDistance(trigPin3, echoPin3);
   int dist4_ori = getDistance(trigPin4, echoPin4);
-  Serial.print("\ndist3 ori: ");
+  Serial.print("\ndist3 original: ");
   Serial.print(dist3_ori);
   
   while(true)
@@ -230,8 +235,6 @@ void initial_move()
     dist2 = getDistance(trigPin2, echoPin2);
     
     dist3 = getDistance(trigPin3, echoPin3);
-    Serial.print("\nDIST3: ");
-    Serial.print(dist3);
     
     if(dist1 > 8 && dist2 > 4)
     { // check initial distance
@@ -259,11 +262,11 @@ void initial_move()
        dist4 = getDistance(trigPin4, echoPin4);
        int diff3 = dist3 - dist3_ori;
        int diff4 = dist4 - dist4_ori;
-       Serial.print("DIST3: ");
+       Serial.print("Dist3 after time out: ");
        Serial.print(dist3);
        
        if(abs(diff3) > 1 && abs(diff4) > 1)
-       { // no that straight
+       { // not that straight
           straightFlag = 0;
           if(diff3 > 0 && diff4 < 0) rightFlag = 1;
           if(diff4 > 0 && diff3 < 0) leftFlag = 1;
@@ -274,7 +277,7 @@ void initial_move()
        }
        else if(abs(diff3) <= 1 || abs(diff4) <= 1)
        { // todo: perfect straight & not in middle
-          Serial.print("perfect straight & not in middle\n");
+          Serial.print("\nperfect straight & not in middle\n");
           straightFlag = 1;
           rightFlag = 0;
           leftFlag = 0;
@@ -305,7 +308,7 @@ void headLeft()
   dist3 = getDistance(trigPin3, echoPin3);
   dist4 = getDistance(trigPin4, echoPin4);
   while(abs(dist3-dist4) !=0){
-    Serial.print("\nNormal Stage1: head left\n");
+    Serial.print("\nNormal Stage1 of head left\n");
     forward_car();
     dist3 = getDistance(trigPin3, echoPin3);
     dist4 = getDistance(trigPin4, echoPin4);
@@ -321,7 +324,7 @@ void headRight()
   dist3 = getDistance(trigPin3, echoPin3);
   dist4 = getDistance(trigPin4, echoPin4);
   while(abs(dist3-dist4) !=0){ // todo: check 5 & 6
-    Serial.print("\nNormal stage2: head right\n");
+    Serial.print("\nNormal stage2 of head right\n");
     forward_car();
     dist3 = getDistance(trigPin3, echoPin3);
     dist4 = getDistance(trigPin4, echoPin4);
@@ -333,10 +336,9 @@ void headRight()
 
 void headRight_2()
 {
-  Serial.print("Special stage2: headRight_2\n");
+  Serial.print("Special stage2 of headRight_2\n");
   turn_straight();
-//  while(dist3 != dist4){
-// while(abs(dist3-dist4) > 1){
+
   while(true)
   {
     dist3 = getDistance(trigPin3, echoPin3);
@@ -357,17 +359,16 @@ void headRight_2()
   }
   stop_car();
   rightFlag = 0;
-  Serial.print("end special stage2\n");
+  Serial.print("End special stage2\n");
   
-  delay(2000);
+  delay(1000);
 }
 
 void headLeft_2()
 {
-  Serial.print("Special stage2: headLeft_2\n");
+  Serial.print("Special stage2 of headLeft_2\n");
   turn_straight();
-//  while(dist3 != dist4){
-// while(abs(dist3-dist4) > 1){
+
   while(true)
   {
     dist3 = getDistance(trigPin3, echoPin3);
@@ -388,9 +389,9 @@ void headLeft_2()
   }
   stop_car();
   leftFlag = 0;
-  Serial.print("end special stage2\n");
+  Serial.print("End special stage2\n");
   
-  delay(2000);
+  delay(1000);
 }
 
 int getDistance(int trigPin, int echoPin)
@@ -415,7 +416,7 @@ int check_finalPosition()
     Serial.print(dist3);
     Serial.print("check final position: dist4: ");
     Serial.print(dist4);
-    if(dist3 > 20 || dist4 > 20) ////////
+    if(dist3 > 20 || dist4 > 20) // car goes over forward path
     {
       return 1;
     }
@@ -431,8 +432,8 @@ void check_finalStage()
       dist4 = getDistance(trigPin4, echoPin4);
       dist5 = getDistance(trigPin5, echoPin5);
       dist6 = getDistance(trigPin6, echoPin6); 
-      Serial.print("Check final stage\n");
-      Serial.print(" dist3: ");
+      Serial.print("\nCheck final stage\n");
+      Serial.print("dist3: ");
       Serial.print(dist3);
       Serial.print(" dist4: ");
       Serial.print(dist4);
@@ -443,7 +444,7 @@ void check_finalStage()
 
       if(check_finalPosition())
       {
-        Serial.print("break check final stage\n");
+        Serial.print("Break check_finalStage\n");
         break;
       }
   
@@ -452,18 +453,19 @@ void check_finalStage()
         // still straight
         turn_straight();
       }
-      else{
+      else
+      {
         
-        if(dist5-dist3 > 1 || dist4-dist6>1)
+        if(dist5-dist3 > 1 || dist4-dist6 > 1)
         {
-          Serial.print("\nFinal stage head left\n");
+          Serial.print("\nhead left in final stage\n");
           turn_right();
-          //steerControl.writeMicroseconds(1470);
+          //steerControl.writeMicroseconds(1470); // manual input
           make_parallel();
         }
-        else if(dist3-dist5>1 || dist6-dist4>1)
+        else if(dist3-dist5 > 1 || dist6-dist4 > 1)
         {
-          Serial.print("\nFinal stage head right\n");
+          Serial.print("\nhead right in final stage\n");
           turn_left();
           //steerControl.writeMicroseconds(1730);
           make_parallel();
