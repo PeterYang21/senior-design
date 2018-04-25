@@ -23,8 +23,8 @@ const int steerPin = 15;
 const int distToFront = 100;
 
 // PWM
-const int forward = 1555; 
-const int stop_val = 1500;
+const int forward =  1505; //1553; 
+const int stop_val = 1450;
 const int reverse = 1400;
 
 const int right = 1500;
@@ -37,6 +37,7 @@ int leftFlag = 0, rightFlag = 0, straightFlag = 0;
 int initialFlag = 1;
 // End Flag
 
+int lot_flag; // 0 left parking lot; 1 right parking lot
 int dist1,dist2,dist3,dist4,dist5,dist6,dist7;
 const long interval = 10000;
 Servo speedControl, steerControl;
@@ -53,6 +54,8 @@ Servo speedControl, steerControl;
  */
 
 void setup() {
+  lot_flag = 1; //set default parking lot
+
   pinMode(trigPin1, OUTPUT);
   pinMode(echoPin1, INPUT);
   pinMode(trigPin2, OUTPUT);
@@ -131,6 +134,8 @@ void loop(){ //Mind the infinite loop()
      * stage 3
      */
     set_parallel_1(); // todo: merge set_parallel & set_parallel_1?
+
+    straightFlag = 1;
   }
   
   // s2-case2: car heading right
@@ -154,22 +159,37 @@ void loop(){ //Mind the infinite loop()
      * stage 3
      */
     set_parallel_1(); // todo: merge set_parallel & set_parallel_1?
+
+    straightFlag = 1;
   }
 
   // s2-case3: car heading straight
-  else if(straightFlag){ 
+  if(straightFlag)
+  { 
     dist3 = getDistance(trigPin3, echoPin3);
     dist4 = getDistance(trigPin4, echoPin4);
     dist5 = getDistance(trigPin5, echoPin5);
     dist6 = getDistance(trigPin6, echoPin6);
     if(abs(dist3-dist4) <=1 || abs(dist5-dist6) <= 1) // middle of the road
     {
+      Serial.print("check final stage\n");
       check_finalStage();
     }
     else 
     {
-      Serial.print("Other straight cases\n");
-      // todo: other cases of straight
+      Serial.print("Other straight cases\n"); // todo: other cases of straight
+      if(dist4-dist3 > 1)
+      {
+        Serial.print("straightInLeft\n");
+        straightInLeft();
+        check_finalStage();
+      }
+      else
+      {
+        Serial.print("straightInRight\n");
+        straightInRight();
+        check_finalStage();
+      }
     }
   }
 
@@ -179,7 +199,7 @@ void loop(){ //Mind the infinite loop()
   initialFlag = 0;
   leftFlag = 0;
   rightFlag = 0;
-  straightFlag=  0;
+  straightFlag = 0; 
   Serial.print("stop car in forward path\n");
   stop_car();
   
@@ -189,7 +209,159 @@ void loop(){ //Mind the infinite loop()
   /*
    * add garage parking step here
    */
+
+
+      turn_straight();
+    delay(2000);
+    
+  if(lot_flag == 0){
+// park to left lot  
+      Serial.print("\n Park to left lot ");
+
+//      forward_car();
+      speedControl.writeMicroseconds(forward);
+      steerControl.writeMicroseconds(1930);
+      delay(1200);
+
+
+      dist1 = getDistance(trigPin1, echoPin1);
+      Serial.print("\n step1 sensor1: ");
+      Serial.print(dist1);
+    
+
+      while(dist1 > 14){
+//      forward_car();
+      speedControl.writeMicroseconds(forward);
+        steerControl.writeMicroseconds(1930);
+        
+        dist1 = getDistance(trigPin1, echoPin1);
+        Serial.print("\n while loop sensor1: ");
+        Serial.print(dist1);
+     
+      }
+    
+    stop_car();
+    turn_straight();
+    Serial.print("\n straight & stop \n");
+    delay(3000);
+//      forward_car();
+      speedControl.writeMicroseconds(forward);
+    steerControl.writeMicroseconds(1300);
+    delay(1000);
+
+    dist3 = getDistance(trigPin3, echoPin3);
+    Serial.print("\n step2 sensor3: ");
+    Serial.print(dist3);
+
+    dist5 = getDistance(trigPin5, echoPin5);
+    Serial.print("\n step2 sensor5: ");
+    Serial.print(dist5);   
+    
+    while(dist3 != dist5){ // todo: 1
+//      forward_car();
+      speedControl.writeMicroseconds(forward);
+      steerControl.writeMicroseconds(1250);
+
+      dist3 = getDistance(trigPin3, echoPin3);
+      Serial.print("\n while sensor3: ");
+      Serial.print(dist3);
+
+      dist5 = getDistance(trigPin5, echoPin5);
+      Serial.print("\n while sensor5: ");
+     Serial.print(dist5); 
+    }
+
+  } else if(lot_flag == 1){
+
+
+    
+//park to right lot
+      Serial.print("\n Park to right lot ");
+
+//      forward_car();
+      speedControl.writeMicroseconds(forward);
+      steerControl.writeMicroseconds(1295);
+      delay(1200);
+
+    //stop_car();
+
+      dist2 = getDistance(trigPin2, echoPin2);
+      Serial.print("\n step1 sensor2: ");
+      Serial.print(dist2);
+    
+
+      while(dist2 > 13){
+//        forward_car();
+        speedControl.writeMicroseconds(forward);
+        steerControl.writeMicroseconds(1295);
+        
+        dist2 = getDistance(trigPin2, echoPin2);
+        Serial.print("\n while loop sensor2: ");
+        Serial.print(dist2);
+      }
+    
+    stop_car();
+    turn_straight();
+    Serial.print("\n straight & stop \n");
+    delay(3000);
+
+//      forward_car();
+      speedControl.writeMicroseconds(forward);
+    steerControl.writeMicroseconds(1910);
+    delay(1000);
+
+    dist4 = getDistance(trigPin4, echoPin4);
+    Serial.print("\n step2 sensor4: ");
+    Serial.print(dist4);
+
+    dist6 = getDistance(trigPin6, echoPin6);
+    Serial.print("\n step2 sensor6: ");
+    Serial.print(dist6);   
+    
+    while (dist4 != dist6 ){
+//      forward_car();
+      speedControl.writeMicroseconds(forward);
+      steerControl.writeMicroseconds(1910);
+
+      dist4 = getDistance(trigPin4, echoPin4);
+      Serial.print("\n while sensor4: ");
+      Serial.print(dist4);
+
+      dist6 = getDistance(trigPin6, echoPin6);
+      Serial.print("\n while sensor6: ");
+      Serial.print(dist6);
+    }
+    
+  }
+
+  stop_car();
+  turn_straight();
+  delay(3000);
+
+  dist7 = getDistance(trigPin7, echoPin7);
+  Serial.print("\n step3 sensor7: ");
+  Serial.print(dist7);
   
+//      forward_car();
+      speedControl.writeMicroseconds(forward);
+      
+  while(dist7 > 12){
+//      forward_car();
+      speedControl.writeMicroseconds(forward);
+    Serial.print("\n step3 go straight ");
+    
+    dist7 = getDistance(trigPin7, echoPin7);
+    Serial.print("\n step3 sensor7: ");
+    Serial.print(dist7);
+
+  }
+
+  stop_car();
+  turn_straight();
+  Serial.print("\n end \n");
+  delay(20000);
+     exit(0);
+
 }
 
 void initial_move() // stage1
@@ -210,7 +382,7 @@ void initial_move() // stage1
     
     dist3 = getDistance(trigPin3, echoPin3);
     
-    if(dist1 > 8 && dist2 > 4)
+    if(dist1 > 8 && dist2 > 5) // todo: Jose case
     { // check initial distance
       forward_car(); 
       if(dist1 <= 10)
@@ -229,6 +401,11 @@ void initial_move() // stage1
       }
     }
 
+//    if(abs(dist3-dist5) <= 1 || abs(dist4-dist6) <= 1) // car is straight but pretty close to one side of the road
+//    {
+//      
+//    }
+//    
     if(currentTime - startTime > 2000)
     {   
        Serial.print("Time Out\n");
@@ -258,11 +435,16 @@ void initial_move() // stage1
        }
        break;
     }
-    
-    if(dist1 <= 8 || dist2 <= 4) // if too close to sideways
+
+    if((dist1 <= 8)|| (dist2 <= 5)) // if too close to sideways
     { 
         break;
     }
+    
+//    if((dist1 <= 8 && abs(dist3-dist5)>1 )|| (dist2 <= 4 && abs(dist4-dist6>1)) // if too close to sideways
+//    { 
+//        break;
+//    }
    }
    
   initialFlag = 0;
@@ -281,7 +463,7 @@ void headLeft()
   turn_right();
   dist3 = getDistance(trigPin3, echoPin3);
   dist4 = getDistance(trigPin4, echoPin4);
-  while(abs(dist3-dist4) !=0)
+  while(abs(dist3-dist4) > 1)
   {
     Serial.print("\nNormal Stage1 of head left\n");
     forward_car();
@@ -298,8 +480,12 @@ void headRight()
   steerControl.writeMicroseconds(1900); // turn left
   dist3 = getDistance(trigPin3, echoPin3);
   dist4 = getDistance(trigPin4, echoPin4);
-  while(abs(dist3-dist4) !=0){ // todo: check 5 & 6
+  while(abs(dist3-dist4) > 1){ // todo: check 5 & 6
     Serial.print("\nNormal stage2 of head right\n");
+      Serial.print(" dist3: ");
+      Serial.print(dist3);
+      Serial.print(" dist4: ");
+      Serial.print(dist4);
     forward_car();
     dist3 = getDistance(trigPin3, echoPin3);
     dist4 = getDistance(trigPin4, echoPin4);
@@ -390,7 +576,7 @@ int check_finalPosition()
     Serial.print(dist3);
     Serial.print("check final position: dist4: ");
     Serial.print(dist4);
-    if(dist3 > 20 || dist4 > 20) // car goes over forward path
+    if(dist3 > 100 || dist4 > 100) // car goes over forward path
     {
       return 1;
     }
@@ -401,7 +587,7 @@ void check_finalStage()
 {
     while(true)
     {
-      forward_car();
+//      forward_car();
       dist3 = getDistance(trigPin3, echoPin3);
       dist4 = getDistance(trigPin4, echoPin4);
       dist5 = getDistance(trigPin5, echoPin5);
@@ -421,6 +607,8 @@ void check_finalStage()
         Serial.print("Break check_finalStage\n");
         break;
       }
+
+      forward_car();
   
       if(dist3 == dist5 || dist4 == dist6) // Todo
       {
@@ -452,7 +640,7 @@ void check_finalStage()
 }
 
 void set_parallel(){
-//    dist3 = getDistance(trigPin3, echoPin3); // no need to update distances
+//    dist3 = getDistance(trigPin3, echoPin3); // no need to update distances outside
 //    dist4 = getDistance(trigPin4, echoPin4);
 //    dist5 = getDistance(trigPin5, echoPin5);
 //    dist6 = getDistance(trigPin6, echoPin6);
@@ -484,13 +672,19 @@ void set_parallel(){
 
 void set_parallel_1()
 {
-    dist3 = getDistance(trigPin3, echoPin3);
-    dist4 = getDistance(trigPin4, echoPin4);
-    dist5 = getDistance(trigPin5, echoPin5);
-    dist6 = getDistance(trigPin6, echoPin6);
+//    dist3 = getDistance(trigPin3, echoPin3);
+//    dist4 = getDistance(trigPin4, echoPin4);
+//    dist5 = getDistance(trigPin5, echoPin5);
+//    dist6 = getDistance(trigPin6, echoPin6);
     
-    while(dist4 != dist6 || dist3 != dist5)
+//    while(dist4 != dist6 || dist3 != dist5)
+    while(abs(dist4-dist6) > 1 || abs(dist3-dist5) > 1)
     { // check if parallel
+      if(check_finalPosition())
+      {
+        Serial.print("Break set_parallel_1\n");
+        break;
+      }
        forward_car();
        dist4 = getDistance(trigPin4, echoPin4);
        dist6 = getDistance(trigPin6, echoPin6);
@@ -509,6 +703,50 @@ void set_parallel_1()
 
     stop_car();
     turn_straight();
+}
+
+void straightInLeft()
+{
+  turn_right();
+  while(dist3 != dist4) //////////
+  {
+    if(check_finalPosition())
+    {
+       turn_straight();
+       return;
+    }
+    forward_car();
+    dist3 = getDistance(trigPin3, echoPin3);
+    dist4 = getDistance(trigPin4, echoPin4);
+    Serial.print("\nKLAJFKLJADJFLAFJKstraightInLeft dist3: ");
+    Serial.print(dist3);
+    Serial.print(" dist4: ");
+    Serial.print(dist4);
+  }
+  turn_left();
+  set_parallel_1();
+}
+
+void straightInRight()
+{
+  turn_left();
+  while(dist3-dist4 > 1)
+  {
+    if(check_finalPosition())
+    {
+       turn_straight();
+       return;
+    }
+    forward_car();
+    dist3 = getDistance(trigPin3, echoPin3);
+    dist4 = getDistance(trigPin4, echoPin4);
+    Serial.print("\nstraightInRight dist3: ");
+    Serial.print(dist3);
+    Serial.print(" dist4: ");
+    Serial.print(dist4);
+  }
+  turn_right();
+  set_parallel_1();
 }
 
 /* 
