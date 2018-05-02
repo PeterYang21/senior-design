@@ -118,10 +118,8 @@ void loop(){ //Mind the infinite loop()
  //  delay(200);
 
 
- B = analogRead(buttonB);
+  B = analogRead(buttonB);
  // delay(200);
-
- 
  }
  
 
@@ -131,17 +129,16 @@ void loop(){ //Mind the infinite loop()
  // Serial.print("\nB");
  Serial.print(B);
 
-
-// if((A > 100) || (B > 100)){
-
-
-   if((A == 0) && (B >100) ){
+   if((A == 0) && (B >100) )
+   {
         user_input = 0; // user select right lot
         Serial.print("\nuser right");
-     } else {
+   } 
+   else 
+   {
         user_input = 1;
         Serial.print("\nuser  left");
-     }
+   }
 //        speedControl.writeMicroseconds(forward);
 //        delay(2500);
    dist1 = getDistance(trigPin1, echoPin1);
@@ -230,7 +227,7 @@ void loop(){ //Mind the infinite loop()
 //      Serial.print("headRight normal");
       headRight(); // stage2
       //delay(1000);
-      steerControl.writeMicroseconds(1450); // turn right
+//      steerControl.writeMicroseconds(1450); // turn right
     }
 
     /*
@@ -268,8 +265,8 @@ void loop(){ //Mind the infinite loop()
         straightInRight();
         check_finalStage();
       }
-     }
     }
+  }
 
   /*
    * clear all
@@ -306,11 +303,6 @@ void loop(){ //Mind the infinite loop()
   Serial.print("done while time");
   delay(200);
 
-
-
-
-
-    
   if(lot_flag == 1){
 // park to left lot  
       Serial.print("\n Park to left lot ");
@@ -387,11 +379,9 @@ void loop(){ //Mind the infinite loop()
 
   }
 
-  } else if(lot_flag == 0){
+  } 
+  else if(lot_flag == 0){ //park to right lot
 
-
-    
-//park to right lot
       Serial.print("\n Park to right lot ");
 
       speedControl.writeMicroseconds(forward+2);
@@ -465,7 +455,8 @@ void loop(){ //Mind the infinite loop()
 
   }
     
-  } else if(lot_flag ==2){
+  } 
+  else if(lot_flag ==2){
     stop_car();
     turn_left();
     delay(5000);
@@ -481,6 +472,10 @@ void loop(){ //Mind the infinite loop()
 //  turn_straight();
 //  Serial.print("\n B \n");
 }
+
+/* 
+ * functions
+ */
 
 void initial_move() // stage1
 { 
@@ -637,53 +632,66 @@ void headLeft() // add stopping function
 
 void headRight()
 { 
+  //    Serial.print("\nNormal stage2 of head right\n");
   steerControl.writeMicroseconds(1900); // turn left
   dist3 = getDistance(trigPin3, echoPin3);
   dist4 = getDistance(trigPin4, echoPin4);
-  while(dist3-dist4 > 2){ // todo:  abs(dist3-dist4) > 1 check 5 & 6
-//    Serial.print("\nNormal stage2 of head right\n");
-//      Serial.print(" dist3: ");
-//      Serial.print(dist3);
-//      Serial.print(" dist4: ");
-//      Serial.print(dist4);
-    forward_car();
-    dist3 = getDistance(trigPin3, echoPin3);
-    dist4 = getDistance(trigPin4, echoPin4);
-  }
-  stop_car();
-  turn_straight();
-  rightFlag = 0;
-}
-
-void headRight_2()
-{
-//  Serial.print("Special stage2: headRight_2\n");
-  turn_straight();
-
-  while(true)
+  if(abs(dist3-dist4) > 2)
   {
-    dist3 = getDistance(trigPin3, echoPin3);
-    dist4 = getDistance(trigPin4, echoPin4);
-//    Serial.print("Dist3: ");
-//    Serial.print(dist3);
-//    Serial.print(" Dist4: ");
-//    Serial.print(dist4);
- 
-    if(dist3-dist4 > 1) // todo abs(dist3-dist4)==0
-    {
-//      Serial.print("\nCar center in middle :");
-      break;
+    Serial.print("Dist3 and 4 not equals\n");
+    while(abs(dist3-dist4) > 2)
+    { 
+        dist7 = getDistance(trigPin7, echoPin7);
+  //      Serial.print("\ndist7: ");
+  //      Serial.print(dist7);
+        if(dist7 < 15)
+        {
+  //        Serial.print("\nstop car\n");
+          stop_car();
+        }
+        else
+        {
+          forward_car();
+        }
+      dist3 = getDistance(trigPin3, echoPin3);
+      dist4 = getDistance(trigPin4, echoPin4);
+      dist7 = getDistance(trigPin7, echoPin7);
     }
-    else
-    {
-      forward_car();
-    }
+  //      Serial.print(" dist3: ");
+  //      Serial.print(dist3);
+  //      Serial.print(" dist4: ");
+  //      Serial.print(dist4);
+    steerControl.writeMicroseconds(1450); // turn right, and start entering stage 3 
   }
-  stop_car();
-  rightFlag = 0;
-//  Serial.print("End special stage2\n");
+  else
+  {
+    Serial.print("Dist3 and 4 equals\n");
+    while(dist5-dist3 > 1)
+    {
+      dist7 = getDistance(trigPin7, echoPin7);
+      Serial.print("dist7: ");
+      Serial.print(dist7);
+      if(dist7 < 15)
+      {
+        Serial.print("stop car\n");
+        stop_car();
+      }
+      else
+      {
+        forward_car();
+      }
+      dist3 = getDistance(trigPin3, echoPin3);
+      dist5 = getDistance(trigPin5, echoPin5);
+      dist7 = getDistance(trigPin7, echoPin7);
+    }
+    Serial.print("\nis parallel\n");
+    turn_straight();
+    skipStage3 = 1;
+    straightInRight();
+    check_finalStage();    
+  }
   
-  delay(1000);
+  //  rightFlag = 0;
 }
 
 void headLeft_2()
@@ -718,6 +726,38 @@ void headLeft_2()
   }
   stop_car();
   leftFlag = 0;
+//  Serial.print("End special stage2\n");
+  
+  delay(1000);
+}
+
+
+void headRight_2()
+{
+//  Serial.print("Special stage2: headRight_2\n");
+  turn_straight();
+
+  while(true)
+  {
+    dist3 = getDistance(trigPin3, echoPin3);
+    dist4 = getDistance(trigPin4, echoPin4);
+//    Serial.print("Dist3: ");
+//    Serial.print(dist3);
+//    Serial.print(" Dist4: ");
+//    Serial.print(dist4);
+ 
+    if(dist3-dist4 > 1) // todo abs(dist3-dist4)==0
+    {
+//      Serial.print("\nCar center in middle :");
+      break;
+    }
+    else
+    {
+      forward_car();
+    }
+  }
+  stop_car();
+  rightFlag = 0;
 //  Serial.print("End special stage2\n");
   
   delay(1000);
@@ -1023,15 +1063,14 @@ void setlot() {
     
             //both lot full
       lot_flag = 2;
-  }else if(receivedInt ==2){
-    lot_flag =user_input;
+  }
+  else if(receivedInt ==2){
+    lot_flag = user_input;
   }
     Serial.print("\n int");
     Serial.print(receivedInt);
     Serial.print("\n lotflag");
     Serial.print(lot_flag);
-
-
 }
 
 
